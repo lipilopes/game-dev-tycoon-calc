@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Game Dev Tycoon</title>
+        <style>
+          :root {
+          --bg-color: #1e1e24;
+          --panel-bg: #2b2b36;
+          --text-main: #f5f5f5;
+          --text-muted: #a0a0a0;
+          --accent: #4caf50;
+          --border: #3f3f4e;
+
+          --bar-high: #4caf50;
+          --bar-med: #ff9800;
+          --bar-low: #f44336;
+          }
+
+          body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: var(--bg-color);
+          color: var(--text-main);
+          margin: 0;
+          padding: 20px;
+          display: flex;
+          justify-content: center;
+          }
+
+          .container {
+          max-width: 950px;
+          width: 100%;
+          background-color: var(--panel-bg);
+          border-radius: 10px;
+          padding: 30px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          }
+
+          h1 {
+          text-align: center;
+          margin-top: 0;
+          border-bottom: 2px solid var(--border);
+          padding-bottom: 15px;
+          }
+
+          .form-group {
+          margin-bottom: 25px;
+          }
+
+          label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: bold;
+          color: var(--text-muted);
+          }
+
+          select {
+          width: 100%;
+          padding: 12px;
+          background-color: var(--bg-color);
+          color: var(--text-main);
+          border: 1px solid var(--border);
+          border-radius: 5px;
+          font-size: 16px;
+          outline: none;
+          }
+
+          select:focus {
+          border-color: var(--accent);
+          }
+
+          .genres-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 30px;
+          }
+
+          .genre-btn {
+          background-color: var(--bg-color);
+          color: var(--text-main);
+          border: 1px solid var(--border);
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.2s ease;
+          }
+
+          .genre-btn:hover {
+          border-color: var(--accent);
+          }
+
+          .genre-btn.active {
+          background-color: var(--accent);
+          color: white;
+          border-color: var(--accent);
+          }
+
+          .results-panel {
+          display: none;
+          animation: fadeIn 0.3s ease;
+          }
+
+          .info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 30px;
+          }
+
+          .info-card {
+          background-color: var(--bg-color);
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          }
+
+          .info-card h3 {
+          margin-top: 0;
+          color: var(--accent);
+          margin-bottom: 15px;
+          }
+
+          .tag-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          }
+
+          .tag {
+          background-color: var(--panel-bg);
+          border: 1px solid var(--border);
+          padding: 5px 10px;
+          border-radius: 4px;
+          font-size: 14px;
+          }
+
+          .sliders-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          }
+
+          .stage-card {
+          background-color: var(--bg-color);
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          }
+
+          .slider-row {
+          margin-bottom: 15px;
+          }
+
+          .slider-label {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 5px;
+          font-size: 14px;
+          }
+
+          .progress-bar {
+          width: 100%;
+          height: 10px;
+          background-color: var(--panel-bg);
+          border-radius: 5px;
+          overflow: hidden;
+          }
+
+          .progress-fill {
+          height: 100%;
+          border-radius: 5px;
+          transition: width 0.5s ease;
+          }
+
+          @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+          }
+
+          @media (max-width: 768px) {
+          .info-grid, .sliders-grid {
+          grid-template-columns: 1fr;
+          }
+          }
+        </style>
+      </head>
+  <body>
+
+    <div class="container">
+      
+      <h1>Game Dev Tycoon</h1>
+
+      <div class="form-group">
+        <label for="topic-select">Selecione o Tema:</label>
+        <select id="topic-select">
+          <option value="" selected="" disabled="">Escolha um tema...</option>
+        </select>
+      </div>
+
+      <div id="genres-container" class="genres-container"></div>
+
+      <div id="results-panel" class="results-panel">
+        <div class="info-grid">
+          <div class="info-card">
+            
+            <h3>Público-Alvo Ideal</h3>
+            <div id="audience-list" class="tag-list"></div>
+            
+            <br></br>
+            
+            <h3>Público-Alvo Ideal [Plataformas]</h3>
+            <div id="plat-audience-list" class="tag-list"></div>
+            
+          </div>
+          
+          <div class="info-card">
+            <h3>Plataformas Recomendadas</h3>
+            <div id="platforms-list" class="tag-list"></div>
+          </div>
+          
+        </div>
+        
+        <div class="info-card" id="card-mvp" style="display: none; border-color: var(--bar-high);">
+          <h3 style="color: var(--bar-high);">🌟 Melhor Combinação para o Tema:</h3>
+          <div id="mvp-list" class="tag-list"></div>
+        </div>
+        
+        <h3 style="color: var(--text-muted); margin-bottom: 15px;">Fases Do Desenvolvimento:</h3>
+        <div class="sliders-grid" id="sliders-container"></div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+
+      const temasData = {
+      "Abstrato":             { generos: { Ação:"++",   Aventura:"+++", RPG:"---",  Simulação:"---",    Estratégia:"+",   Casual:"---" }, publico: { I:"+",     T:"++",     A:"+++" } },
+      "Avião":                { generos: { Ação:"+++",  Aventura:"---", RPG:"+",    Simulação:"+++",    Estratégia:"+++", Casual:"+++" }, publico: { I:"+++",   T:"+++",    A:"++"  } },
+      "Aliens":               { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"---",    Estratégia:"++",  Casual:"--" },  publico: { I:"++",    T:"+++",    A:"+++" } },
+      "História Alternativa": { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"+",      Estratégia:"++",  Casual:"---" }, publico: { I:"---",   T:"+++",    A:"+++" } },
+      "Assassinos":           { generos: { Ação:"+++",  Aventura:"--",  RPG:"+++",  Simulação:"+",      Estratégia:"---", Casual:"---" }, publico: { I:"---",   T:"+",      A:"+++" } },
+      "Negócios":             { generos: { Ação:"---",  Aventura:"+",   RPG:"+",    Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"++",    T:"+++",    A:"--" } },
+      "Cidade":               { generos: { Ação:"--",   Aventura:"---", RPG:"--",   Simulação:"+++",    Estratégia:"+++", Casual:"--" },  publico: { I:"++",    T:"+++",    A:"+" } },
+      "Colonização":          { generos: { Ação:"--",   Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"--" },  publico: { I:"--",    T:"+++",    A:"+" } },
+      "Comédia":              { generos: { Ação:"---",  Aventura:"+++", RPG:"+",    Simulação:"---",    Estratégia:"---", Casual:"+++" }, publico: { I:"+",     T:"++",     A:"+++" } },
+      "Construção":           { generos: { Ação:"--",   Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"++",  Casual:"+" },   publico: { I:"+", T:"+++", A:"++" } },
+      "Cozinha":              { generos: { Ação:"++",   Aventura:"--",  RPG:"+",    Simulação:"+++",    Estratégia:"--",  Casual:"+++" }, publico: { I:"+", T:"+++", A:"---" } },
+      "Crime":                { generos: { Ação:"+++",  Aventura:"--",  RPG:"+",    Simulação:"++",     Estratégia:"--",  Casual:"---" }, publico: { I:"---", T:"+", A:"+++" } },
+      "Cyberpunk":            { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"+",      Estratégia:"--",  Casual:"---" }, publico: { I:"--", T:"++", A:"+++" } },
+      "Dança":                { generos: { Ação:"--",   Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"+++", T:"++", A:"+" } },
+      "Detetive":             { generos: { Ação:"---",  Aventura:"+++", RPG:"+++",  Simulação:"+",      Estratégia:"---", Casual:"++" },  publico: { I:"++", T:"+++", A:"+" } },
+      "Desastre":             { generos: { Ação:"++",   Aventura:"+",   RPG:"--",   Simulação:"+++",    Estratégia:"+++", Casual:"--" },  publico: { I:"--", T:"++", A:"+++" } },
+      "Masmorra":             { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"+", T:"+++", A:"+++" } },
+      "Distópico":            { generos: { Ação:"+",    Aventura:"++",  RPG:"+",    Simulação:"+++",    Estratégia:"++",  Casual:"---" }, publico: { I:"---", T:"+", A:"+++" } },
+      "Evolução":             { generos: { Ação:"--",   Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"+", T:"+++", A:"--" } },
+      "Expedição":            { generos: { Ação:"--",   Aventura:"++",  RPG:"---",  Simulação:"++",     Estratégia:"+++", Casual:"---" }, publico: { I:"+", T:"+++", A:"++" } },
+      "Esportes Extremos":    { generos: { Ação:"+++",  Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"--",  Casual:"++" },  publico: { I:"+++", T:"--", A:"+++" } },
+      "Fantasia":             { generos: { Ação:"+++",  Aventura:"+++", RPG:"+++",  Simulação:"+",      Estratégia:"+++", Casual:"---" }, publico: { I:"+++", T:"+++",  A:"+++" } },
+      "Fazenda":              { generos: { Ação:"---",  Aventura:"--",  RPG:"---",  Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"+" } },
+      "Moda":                 { generos: { Ação:"---",  Aventura:"+",   RPG:"+++",  Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"+++", T:"+",    A:"---" } },
+      "Game Dev":             { generos: { Ação:"---",  Aventura:"--",  RPG:"---",  Simulação:"+++",    Estratégia:"---", Casual:"+" },   publico: { I:"++",  T:"+++",  A:"--" } },
+      "Governo":              { generos: { Ação:"---",  Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"--" },  publico: { I:"---", T:"+++",  A:"+" } },
+      "Hacking":              { generos: { Ação:"--",   Aventura:"+",   RPG:"--",   Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"--", T:"++", A:"+++" } },
+      "História":             { generos: { Ação:"+",    Aventura:"+",   RPG:"+",    Simulação:"+++",    Estratégia:"+++", Casual:"++" },  publico: { I:"+", T:"+++", A:"++" } },
+      "Horror":               { generos: { Ação:"+++",  Aventura:"+++", RPG:"+",    Simulação:"---",    Estratégia:"--",  Casual:"+" },   publico: { I:"---", T:"++", A:"+++" } },
+      "Hospital":             { generos: { Ação:"---",  Aventura:"---", RPG:"+",    Simulação:"+++",    Estratégia:"+",   Casual:"--" },  publico: { I:"--", T:"+++", A:"+" } },
+      "Caça":                 { generos: { Ação:"+++",  Aventura:"++",  RPG:"++",   Simulação:"+++",    Estratégia:"--",  Casual:"++" },  publico: { I:"++", T:"+++", A:"++" } },
+      "Lei":                  { generos: { Ação:"---",  Aventura:"+++", RPG:"++",   Simulação:"++",     Estratégia:"++",  Casual:"---" }, publico: { I:"+", T:"+++", A:"--" } },
+      "Vida":                 { generos: { Ação:"---",  Aventura:"+++", RPG:"++",   Simulação:"+++",    Estratégia:"---", Casual:"+" },   publico: { I:"+++", T:"+++", A:"+" } },
+      "Ciência":              { generos: { Ação:"+++",  Aventura:"+++", RPG:"--",   Simulação:"++",     Estratégia:"---", Casual:"---" }, publico: { I:"+", T:"++", A:"+++" } },
+      "Artes Marciais":       { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"+++",    Estratégia:"--",  Casual:"+++" }, publico: { I:"--", T:"++", A:"+++" } },
+      "Medieval":             { generos: { Ação:"+++",  Aventura:"+++", RPG:"+++",  Simulação:"+",      Estratégia:"+++", Casual:"--" },  publico: { I:"+++", T:"+++", A:"++" } },
+      "Exercito":             { generos: { Ação:"+++",  Aventura:"---", RPG:"+",    Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"--", T:"++", A:"+++" } },
+      "Filmes":               { generos: { Ação:"+",    Aventura:"+",   RPG:"---",  Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"++", T:"+++", A:"++" } },
+      "Música":               { generos: { Ação:"+++",  Aventura:"++",  RPG:"---",  Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"+++", T:"++", A:"+" } },
+      "Mistério":             { generos: { Ação:"---",  Aventura:"+++", RPG:"+++",  Simulação:"+",      Estratégia:"---", Casual:"+" },   publico: { I:"+", T:"++", A:"+++" } },
+      "Mitologia":            { generos: { Ação:"+++",  Aventura:"+",   RPG:"++",   Simulação:"++",     Estratégia:"+",   Casual:"--" },  publico: { I:"--", T:"+++", A:"+++" } },
+      "Ninja":                { generos: { Ação:"+++",  Aventura:"+",   RPG:"+",    Simulação:"---",    Estratégia:"+",   Casual:"++" },  publico: { I:"+++", T:"++", A:"++" } },
+      "Pirata":               { generos: { Ação:"+",    Aventura:"+++", RPG:"++",   Simulação:"++",     Estratégia:"--",  Casual:"+" },   publico: { I:"+++", T:"+++", A:"+" } },
+      "Pós-apocalíptico":     { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"---",    Estratégia:"++",  Casual:"---" }, publico: { I:"---", T:"++", A:"+++" } },
+      "Prisão":               { generos: { Ação:"+++",  Aventura:"+++", RPG:"+",    Simulação:"+++",    Estratégia:"+",   Casual:"---" }, publico: { I:"--", T:"++", A:"+++" } },
+      "Corrida":              { generos: { Ação:"++",   Aventura:"---", RPG:"+",    Simulação:"+++",    Estratégia:"--",  Casual:"+++" }, publico: { I:"+++", T:"+++", A:"++" } },
+      "Ritmo":                { generos: { Ação:"+++",  Aventura:"--",  RPG:"--",   Simulação:"+++",    Estratégia:"---", Casual:"+++" }, publico: { I:"+++", T:"++", A:"+" } },
+      "Romance":              { generos: { Ação:"---",  Aventura:"+++", RPG:"+",    Simulação:"++",     Estratégia:"---", Casual:"++" },  publico: { I:"+", T:"+++", A:"+++" } },
+      "Escola":               { generos: { Ação:"+",    Aventura:"+++", RPG:"+++",  Simulação:"+++",    Estratégia:"+++", Casual:"+" },   publico: { I:"+++", T:"++", A:"--" } },
+      "Sci-fi":               { generos: { Ação:"+++",  Aventura:"+++", RPG:"+++",  Simulação:"+++",    Estratégia:"+++", Casual:"+" },   publico: { I:"+", T:"+++", A:"+++" } },
+      "Espaço":               { generos: { Ação:"+++",  Aventura:"+",   RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"--" },  publico: { I:"+", T:"+++", A:"+++" } },
+      "Esportes":             { generos: { Ação:"+++",  Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"--",  Casual:"+++" }, publico: { I:"+++", T:"+++",  A:"+" } },
+      "Espião":               { generos: { Ação:"+++",  Aventura:"+++", RPG:"+++",  Simulação:"+",      Estratégia:"--",  Casual:"+" },   publico: { I:"+",   T:"++",   A:"+++" } },
+      "Super-heróis":         { generos: { Ação:"+++",  Aventura:"---", RPG:"++",   Simulação:"---",    Estratégia:"---", Casual:"--" },  publico: { I:"+++", T:"+++", A:"+++" } },
+      "Cirurgia":             { generos: { Ação:"+",    Aventura:"--",  RPG:"---",  Simulação:"+++",    Estratégia:"--",  Casual:"---" }, publico: { I:"+", T:"+++", A:"++" } },
+      "Tecnologia":           { generos: { Ação:"---",  Aventura:"--",  RPG:"---",  Simulação:"+++",    Estratégia:"++",  Casual:"---" }, publico: { I:"+", T:"+++", A:"++" } },
+      "Ladrão":               { generos: { Ação:"++",   Aventura:"+",   RPG:"+++",  Simulação:"++",     Estratégia:"---", Casual:"++" },  publico: { I:"--", T:"+++", A:"+++" } },
+      "Viagem no tempo":      { generos: { Ação:"++",   Aventura:"+++", RPG:"+++",  Simulação:"--",     Estratégia:"---", Casual:"--" },  publico: { I:"++", T:"+++", A:"+" } },
+      "Transporte":           { generos: { Ação:"---",  Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"---" }, publico: { I:"++", T:"+++", A:"--" } },
+      "OVNI":                 { generos: { Ação:"+++",  Aventura:"+",   RPG:"---",  Simulação:"+",      Estratégia:"+++", Casual:"+" },   publico: { I:"+", T:"+++", A:"++" } },
+      "Vampiro":              { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"---",    Estratégia:"---", Casual:"--" },  publico: { I:"--", T:"+++", A:"+++" } },
+      "Pet Virtual":          { generos: { Ação:"---",  Aventura:"+",   RPG:"++",   Simulação:"+++",    Estratégia:"++",  Casual:"+++" }, publico: { I:"+++", T:"+", A:"--" } },
+      "Vocabulário":          { generos: { Ação:"---",  Aventura:"---", RPG:"---",  Simulação:"+++",    Estratégia:"+++", Casual:"+++" }, publico: { I:"++", T:"++", A:"---" } },
+      "Lobisomen":            { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"---",    Estratégia:"---", Casual:"--" },  publico: { I:"--", T:"++", A:"+++" } },
+      "Faroeste":             { generos: { Ação:"+",    Aventura:"--",  RPG:"+++",  Simulação:"---",    Estratégia:"---", Casual:"--" },  publico: { I:"+++", T:"++", A:"+++" } },
+      "Zumbis":               { generos: { Ação:"+++",  Aventura:"--",  RPG:"---",  Simulação:"---",    Estratégia:"++",  Casual:"+++" }, publico: { I:"++", T:"+", A:"+++" } }
+      };
+
+      // Plataformas da Imagem 2
+      const plataformasData = {
+      "PC":           { generos: { Ação:"++",   Aventura:"+++", RPG:"++", Simulação:"+++",  Estratégia:"+++", Casual:"---" }, publico: { I:"+",   T:"++",   A:"+++" } },
+      "G64":          { generos: { Ação:"++",   Aventura:"+++", RPG:"++", Simulação:"++",   Estratégia:"+++", Casual:"--" },  publico: { I:"+",   T:"++",   A:"+++" } },
+      "TES":          { generos: { Ação:"+",    Aventura:"--",  RPG:"+",  Simulação:"+",    Estratégia:"--",  Casual:"+++" }, publico: { I:"+++", T:"++",   A:"---" } },
+      "Master V":     { generos: { Ação:"++",   Aventura:"--",  RPG:"+",  Simulação:"+",    Estratégia:"--",  Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"--" } },
+      "Gameling":     { generos: { Ação:"+",    Aventura:"--",  RPG:"++", Simulação:"++",   Estratégia:"---", Casual:"+++" }, publico: { I:"+++", T:"++",   A:"---" } },
+      "Vena Gear":    { generos: { Ação:"++",   Aventura:"+",   RPG:"+",  Simulação:"++",   Estratégia:"---", Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"+"   } },
+      "Vena Oasis":   { generos: { Ação:"+++",  Aventura:"+",   RPG:"+",  Simulação:"++",   Estratégia:"---", Casual:"--" },  publico: { I:"+",   T:"+++",  A:"++"  } },
+      "Super TES":    { generos: { Ação:"++",   Aventura:"++",  RPG:"++", Simulação:"+++",  Estratégia:"--",  Casual:"++" },  publico: { I:"+++", T:"++",   A:"--"  } },
+      "Playsystem":   { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"++", Estratégia:"--",  Casual:"---" }, publico: { I:"+",   T:"+++",  A:"++"  } },
+      "TES 64":       { generos: { Ação:"++",   Aventura:"+",   RPG:"--",   Simulação:"+",  Estratégia:"--",  Casual:"++" },  publico: { I:"+++", T:"++",   A:"++"  } },
+      "DreamVast":    { generos: { Ação:"+++",  Aventura:"--",  RPG:"+",    Simulação:"+++",  Estratégia:"--",  Casual:"--" },  publico: { I:"--", T:"+++", A:"+++" } },
+      "Playsystem 2": { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"++", T:"+++", A:"+"   } },
+      "mBox":         { generos: { Ação:"+++",  Aventura:"+",   RPG:"++",   Simulação:"++",   Estratégia:"--",  Casual:"--" },  publico: { I:"+",  T:"+++", A:"++"  } },
+      "Game Sphere":  { generos: { Ação:"+",    Aventura:"+",   RPG:"--",   Simulação:"+",    Estratégia:"--",  Casual:"+++" }, publico: { I:"++",  T:"++", A:"+"   } },
+      "GS":           { generos: { Ação:"++",   Aventura:"++",  RPG:"+++",  Simulação:"++",   Estratégia:"++",  Casual:"+++" }, publico: { I:"+++", T:"++", A:"+"   } },
+      "PPS":          { generos: { Ação:"+++",  Aventura:"--",  RPG:"+++",  Simulação:"+",    Estratégia:"+",   Casual:"+" },   publico: { I:"+",   T:"++", A:"+++" } },
+      "mBox 360":     { generos: { Ação:"+++",  Aventura:"++",  RPG:"+++",  Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"+",   T:"++", A:"+++" } },
+      "Nuu":          { generos: { Ação:"+",    Aventura:"---", RPG:"--",   Simulação:"+++",  Estratégia:"--",  Casual:"+++" }, publico: { I:"+++", T:"+++",  A:"--"  } },
+      "Playsystem 3": { generos: { Ação:"+++",  Aventura:"++",  RPG:"++",   Simulação:"+++",  Estratégia:"--",  Casual:"+" },   publico: { I:"+",   T:"+++",  A:"++"  } },
+      "grPhone":      { generos: { Ação:"+",    Aventura:"+",   RPG:"--",   Simulação:"++",   Estratégia:"--",  Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"---" } },
+      "grPad":        { generos: { Ação:"--",   Aventura:"++",  RPG:"+",    Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"--",  T:"++",   A:"+"   } },
+      "mPad":         { generos: { Ação:"--",   Aventura:"++",  RPG:"+",    Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"++",  T:"+",    A:"+++" } },
+      "Wuu":          { generos: { Ação:"++",   Aventura:"--",  RPG:"+",    Simulação:"+++",  Estratégia:"--",  Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"--"  } },
+      "OYA":          { generos: { Ação:"++",   Aventura:"--",  RPG:"+",    Simulação:"++",   Estratégia:"+",   Casual:"+++" }, publico: { I:"+",   T:"+++",  A:"--"  } },
+      "mBox One":     { generos: { Ação:"+++",  Aventura:"+",   RPG:"++",   Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"--",  T:"+++",  A:"+"   } },
+      "Playsystem 4": { generos: { Ação:"+++",  Aventura:"+",   RPG:"+++",  Simulação:"++",   Estratégia:"--",  Casual:"++" },  publico: { I:"+",   T:"+++",  A:"++"  } },
+      "mBox Next":    { generos: { Ação:"++",   Aventura:"++",  RPG:"++",   Simulação:"+",    Estratégia:"--",  Casual:"+++" }, publico: { I:"++",  T:"+++",  A:"+" } },
+      "Playsystem 5": { generos: { Ação:"+++",  Aventura:"--",  RPG:"++",   Simulação:"+++",  Estratégia:"--",  Casual:"++" },  publico: { I:"+", T:"+++", A:"++" } }
+      };
+
+      // Estágios e Sliders da Imagem 3
+      const slidersData = {
+      "Ação": {
+      s1: [ { nome: "Engine", val: 100 }, { nome: "Jogabilidade", val: 75 }, { nome: "História", val: 15 } ],
+      s2: [ { nome: "Diálogo", val: 0 }, { nome: "Level Design", val: 75 }, { nome: "IA", val: 100 } ],
+      s3: [ { nome: "Mundo", val: 35 }, { nome: "Gráfico", val: 100 }, { nome: "Som", val: 75 } ]
+      },
+      "Aventura": {
+      s1: [ { nome: "Engine", val: 15 }, { nome: "Jogabilidade", val: 35 }, { nome: "História", val: 100 } ],
+      s2: [ { nome: "Diálogo", val: 100 }, { nome: "Level Design", val: 35 }, { nome: "IA", val: 15 } ],
+      s3: [ { nome: "Mundo", val: 100 }, { nome: "Gráfico", val: 75 }, { nome: "Som", val: 35 } ]
+      },
+      "RPG": {
+      s1: [ { nome: "Engine", val: 15 }, { nome: "Jogabilidade", val: 75 }, { nome: "História", val: 100 } ],
+      s2: [ { nome: "Diálogo", val: 100 }, { nome: "Level Design", val: 75 }, { nome: "IA", val: 35 } ],
+      s3: [ { nome: "Mundo", val: 100 }, { nome: "Gráfico", val: 75 }, { nome: "Som", val: 35 } ]
+      },
+      "Simulação": {
+      s1: [ { nome: "Engine", val: 75 }, { nome: "Jogabilidade", val: 100 }, { nome: "História", val: 35 } ],
+      s2: [ { nome: "Diálogo", val: 15 }, { nome: "Level Design", val: 75 }, { nome: "IA", val: 100 } ],
+      s3: [ { nome: "Mundo", val: 35 }, { nome: "Gráfico", val: 100 }, { nome: "Som", val: 75 } ]
+      },
+      "Estratégia": {
+      s1: [ { nome: "Engine", val: 75 }, { nome: "Jogabilidade", val: 100 }, { nome: "História", val: 35 } ],
+      s2: [ { nome: "Diálogo", val: 15 }, { nome: "Level Design", val: 100 }, { nome: "IA", val: 75 } ],
+      s3: [ { nome: "Mundo", val: 100 }, { nome: "Gráfico", val: 35 }, { nome: "Som", val: 75 } ]
+      },
+      "Casual": {
+      s1: [ { nome: "Engine", val: 0 }, { nome: "Jogabilidade", val: 100 }, { nome: "História", val: 15 } ],
+      s2: [ { nome: "Diálogo", val: 15 }, { nome: "Level Design", val: 100 }, { nome: "IA", val: 0 } ],
+      s3: [ { nome: "Mundo", val: 15 }, { nome: "Gráfico", val: 100 }, { nome: "Som", val: 75 } ]
+      }
+      };
+
+      const domTopicSelect = document.getElementById('topic-select');
+      const domGenresContainer = document.getElementById('genres-container');
+      const domResultsPanel = document.getElementById('results-panel');
+      const domAudienceList = document.getElementById('audience-list');
+      const domPlatformsList = document.getElementById('platforms-list');
+      const domPlatformsAudienceList = document.getElementById('plat-audience-list');
+      const domSlidersContainer = document.getElementById('sliders-container');
+
+      // O
+      let currentTopic = "";
+
+      const initTopics = () => {
+      const sortedTopics = Object.keys(temasData).sort();
+      sortedTopics.forEach(topic => {
+      const opt = document.createElement('option');
+      opt.value = topic;
+      opt.textContent = topic;
+      domTopicSelect.appendChild(opt);
+      });
+      };
+
+      domTopicSelect.addEventListener('change', (e) => {
+      currentTopic = e.target.value;
+      domResultsPanel.style.display = 'none';
+      renderGenres(currentTopic);
+      });
+
+      const renderGenres = (topic) =>
+      {
+      domGenresContainer.innerHTML = '';
+      const genresMap = temasData[topic].generos;
+
+      // Genero
+      Object.entries(genresMap).forEach(([genreName, rating]) =>
+      {
+      if (rating.includes('+'))
+      {
+      const btn = document.createElement('button');
+      btn.className = 'genre-btn';
+      btn.textContent = `${genreName} (${rating})`;
+
+      if (rating === '+++')
+      {
+      btn.style.borderColor = 'var(--bar-high)';
+      }
+
+      btn.addEventListener('click', () =>
+      {
+      document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderResults(topic, genreName);
+      });
+
+      domGenresContainer.appendChild(btn);
+      }
+      });
+      };
+
+      const renderResults = (topic, genre) =>
+      {
+      domResultsPanel.style.display = 'block';
+
+      // Público
+      domAudienceList.innerHTML = '';
+      const audienceMap = temasData[topic].publico;
+      const audienceLabels  = { 'I': 'Infantil', 'T': 'Todos', 'A': 'Adultos' };
+      const perfectAudience = { 'I': '0', 'T': '0', 'A': '0' };
+
+      Object.entries(audienceMap).forEach(([key, rating]) =>
+      {
+      if (rating.includes('+'))
+      {
+      const tag       = document.createElement('span');
+      tag.className   = 'tag';
+      tag.textContent = `${audienceLabels[key]} (${rating})`;
+
+      if (rating === '+++')
+      {
+      tag.style.borderColor = 'var(--bar-high)';
+      tag.style.color = 'var(--bar-high)';
+      perfectAudience[key] = 1;
+      }
+
+      domAudienceList.appendChild(tag);
+      }
+      });
+
+      // Plataformas
+      domPlatformsList.innerHTML = '';
+      domPlatformsAudienceList.innerHTML = '';
+      Object.entries(plataformasData).forEach(([platName, platData]) =>
+      {
+      // Rating
+      const platRating    = platData.generos[genre];
+
+      if (platRating === '+++' || platRating === '++')
+      {
+      const tag = document.createElement('span');
+
+      tag.className = 'tag';
+
+      tag.textContent = `${platName} (${platRating})`;
+
+      if (platRating === '+++')
+      {
+      tag.style.borderColor = 'var(--bar-high)';
+      tag.style.color = 'var(--bar-high)';
+      }
+
+      domPlatformsList.appendChild(tag);
+
+
+      // Audience
+      const platAudienceMap  = platData.publico;
+      Object.entries(platAudienceMap).forEach(([key, rating]) =>
+      {
+      if(perfectAudience[key] == 1)
+      {
+      if (rating === '+++' || rating === '++')
+      {
+      const tagAud = document.createElement('span');
+      tagAud.className   = 'tag';
+      tagAud.textContent = `${platName} - ${audienceLabels[key]} (${rating})`;
+
+      if (rating === '+++')
+      {
+      tagAud.style.borderColor = 'var(--bar-high)';
+      tagAud.style.color = 'var(--bar-high)';
+      }
+
+      domPlatformsAudienceList.appendChild(tagAud);
+      }
+      }
+      });
+
+      }
+
+      });
+
+      if (domPlatformsList.innerHTML === '') domPlatformsList.innerHTML = '<span class="tag">Nenhuma listada</span>';
+
+      // Filtra Mvp
+      // 1. Criamos a constante como um Array (lista) vazio
+      const plataformasMvp = [];
+
+      // 2. Pegamos as informações de público do tema selecionado
+      const publicoDoTema = temasData[topic].publico;
+
+      // 3. Vasculhamos todas as plataformas disponíveis
+      Object.entries(plataformasData).forEach(([platName, platData]) => {
+          const notaPlataformaGenero = platData.generos[genre];
+
+          // Regra A: A Plataforma precisa ser '+++' no Gênero
+          if (notaPlataformaGenero === '+++') 
+          {
+            const publicoDaPlataforma = platData.publico;
+
+            const nomesIdade = { 'I': 'Infantil', 'T': 'Todos', 'A': 'Adultos' };
+
+            // Regra B e C: O público da Plataforma e do Tema precisam ser '+++' na mesma faixa (I, T ou A)
+            for (let idade in publicoDaPlataforma) 
+            {
+              if (publicoDaPlataforma[idade] === '+++' && publicoDoTema[idade] === '+++') 
+              {
+
+                // Sucesso! Adicionamos o objeto à nossa lista
+                plataformasMvp.push({
+                  tema: topic,
+                  plataforma: platName,
+                  genero: genre,
+                  idade: nomesIdade[idade]
+                });
+
+                // Usamos break para pular para a próxima plataforma e evitar
+                // que ela seja adicionada duas vezes se coincidir em duas idades
+                break;
+              }
+            }
+         }
+      });
+      
+      // Pegamos a div do HTML
+      const domMvpList = document.getElementById('mvp-list');
+      const domCardMvp = document.getElementById('card-mvp');
+
+      // Limpamos o resultado anterior
+      domMvpList.innerHTML = '';
+
+      if (plataformasMvp.length > 0) {
+          // Se encontrou algum MVP, mostra o card
+          domCardMvp.style.display = 'block';
+          
+          // Para cada MVP encontrado na nossa lista, criamos uma tag na tela
+          plataformasMvp.forEach(mvp => {
+              const tagMvp = document.createElement('span');
+              tagMvp.className = 'tag';
+              tagMvp.style.backgroundColor = 'var(--bar-high)';
+              tagMvp.style.color = 'white';
+              
+              // Formatando o texto: Tema | Plataforma | Gênero
+              tagMvp.textContent = `${mvp.plataforma} - ${mvp.tema} - ${mvp.genero} - ${mvp.idade}`;
+        
+              domMvpList.appendChild(tagMvp);
+          });
+      } else {
+          // Se não houver plataforma perfeita (MVP) para essa combinação, esconde o card
+          domCardMvp.style.display = 'none';
+      }
+
+
+      // Sliders
+      domSlidersContainer.innerHTML = '';
+      const stages = [
+      { title: "Stage 1", data: slidersData[genre].s1 },
+      { title: "Stage 2", data: slidersData[genre].s2 },
+      { title: "Stage 3", data: slidersData[genre].s3 }
+      ];
+
+      stages.forEach(stage => {
+      const stageDiv = document.createElement('div');
+      stageDiv.className = 'stage-card';
+
+      const title = document.createElement('h3');
+      title.textContent = stage.title;
+      title.style.marginTop = '0';
+      stageDiv.appendChild(title);
+
+      stage.data.forEach(slider => {
+      const row = document.createElement('div');
+      row.className = 'slider-row';
+
+      let color = 'var(--bar-low)';
+      if (slider.val >= 75) color = 'var(--bar-high)';
+      else if (slider.val >= 35) color = 'var(--bar-med)';
+
+      row.innerHTML = `
+      <div class="slider-label">
+        <span>${slider.nome}</span>
+        <span>${slider.val}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${slider.val}%; background-color: ${color};"></div>
+      </div>
+      `;
+      stageDiv.appendChild(row);
+      });
+
+      domSlidersContainer.appendChild(stageDiv);
+      });
+      };
+
+      initTopics();
+      })();
+    </script>
+  </body>
+</html>
